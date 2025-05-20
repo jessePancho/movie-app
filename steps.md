@@ -1,136 +1,430 @@
-## Figma URL
+#### React Movie App: Step-by-Step Instructions
 
-[Color generator](https://www.figma.com/file/P2SJ5QGOZvi49EOpoVTvsT/Color-generator?node-id=0%3A1&t=ZY2gnIJ9zGTSXPW8-1)
-
-## Steps
-
-#### Setup
-
-Create three components: Form, ColorList, and SingleColor.
-
-In the App component, render the Form and ColorList components.
-
-#### Form Component
-
-In the Form component, set up a color state value and a form with an two input fields (color and text). Set up a handleChange function to update the color state value and a handleSubmit function to add the color to the list.
-
-[HTML Color Input](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/color)
-
-#### Values.js
-
-Install the values.js library and use it to generate a list of colors in the App component.
-
-[Values.js Library](https://github.com/noeldelgado/values.js/blob/master/README.md)
+#### 1. Setup the React Project
 
 ```sh
-npm i values.js
-
+bash
+Copy
+Edit
+npx create-react-app movie-app
+cd movie-app
 ```
+
+#### 2. Clean Up Starter Files
+
+Remove unneeded files:
+
+Delete App.test.js, logo.svg, setupTests.js, and reportWebVitals.js.
+
+In index.js, make sure it only renders the <App />.
+
+#### Update index.js:
 
 ```js
-import Values from 'values.js';
-new Values('#f15025').all(10);
+js;
+Copy;
+Edit;
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
 ```
 
-#### Render Colors
+#### 3. Project Structure
 
-Pass the colors list to the ColorList component.
-
-In the ColorList component, iterate over the list of colors and render each one in a SingleColor component. Fix the key problem by providing a unique id for each color.
-
-In the SingleColor component, display the hex value and weight (percent) of each color, and use inline CSS to set the background color of the component.
-
-#### React-Toastify
-
-Import and set up the react-toastify library.
-
-[React Toastify](https://fkhadra.github.io/react-toastify/introduction)
+Create a folder for components:
 
 ```sh
-npm i react-toastify
+bash
+Copy
+Edit
+mkdir src/components
+touch src/components/Movie.js
 ```
 
-main.jsx
+#### 4. Movie Component
+
+src/components/Movie.js:
 
 ```js
-import 'react-toastify/dist/ReactToastify.css';
+import React from 'react';
+
+const Movie = ({ title, poster_path, overview, vote_average }) => {
+  const IMAGE_API = 'https://image.tmdb.org/t/p/w500';
+
+  return (
+    <div className='movie'>
+      <img src={IMAGE_API + poster_path} alt={title} />
+      <div className='movie-info'>
+        <h3>{title}</h3>
+        <span>{vote_average}</span>
+      </div>
+      <div className='movie-overview'>
+        <h4>Overview:</h4>
+        <p>{overview}</p>
+      </div>
+    </div>
+  );
+};
+
+export default Movie;
 ```
 
-App.jsx
+#### 5. App Component Logic
+
+In App.js:
 
 ```js
-import { ToastContainer, toast } from 'react-toastify';
+import React, { useState, useEffect } from 'react';
+import Movie from './components/Movie';
+import './App.css';
 
-toast.success('awesome');
-toast.error('error message');
+const FEATURED_API =
+  'https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=YOUR_API_KEY';
+const SEARCH_API =
+  'https://api.themoviedb.org/3/search/movie?&api_key=YOUR_API_KEY&query=';
 
-return (
-  <main>
-    ...............
-    <ToastContainer position='top-center' />
-  </main>
-);
-```
+function App() {
+  const [movies, setMovies] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
-#### Create Color
+  useEffect(() => {
+    fetch(FEATURED_API)
+      .then((res) => res.json())
+      .then((data) => setMovies(data.results));
+  }, []);
 
-In the App component, create logic to generate a new list of colors when the user submits a new color value. Use react-toastify to display an error message if the values.js library cannot generate a color, and also display a toast message if the user tries to submit an empty value.
+  const handleSearch = (e) => {
+    e.preventDefault();
 
-#### Clipboard
+    if (searchTerm.trim()) {
+      fetch(SEARCH_API + searchTerm)
+        .then((res) => res.json())
+        .then((data) => {
+          setMovies(data.results);
+          setSearchTerm('');
+        });
+    }
+  };
 
-In the SingleColor component, set up a click handler that saves the hex value of the color to the browser clipboard.
-
-To save some value in the navigator clipboard, you can use the Clipboard API, which is a part of the Web API provided by modern browsers. The Clipboard API allows web developers to interact with the user's clipboard, including reading and writing data to it.
-
-Here is an example of how to save a string value to the clipboard using the Clipboard API:
-
-```js
-async function copyToClipboard(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    console.log('Text copied to clipboard');
-  } catch (error) {
-    console.error('Failed to copy text: ', error);
-  }
+  return (
+    <>
+      <header>
+        <form onSubmit={handleSearch}>
+          <input
+            type='text'
+            placeholder='Search for a movie...'
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </form>
+      </header>
+      <div className='movie-container'>
+        {movies.length > 0 &&
+          movies.map((movie) => <Movie key={movie.id} {...movie} />)}
+      </div>
+    </>
+  );
 }
 
-const textToCopy = 'Hello, world!';
-copyToClipboard(textToCopy);
+export default App;
 ```
 
-The flow of the application should look something like this:
+#### Replace YOUR_API_KEY with your TMDB API key.
 
-- Create the Form, ColorList, and SingleColor components.
+#### 6. Basic CSS Styling
 
-- In the App component, render the Form and ColorList components.
-
-- In the Form component, set up a color state value and a form with an input field. Set up a handleChange function to update the color state value and a handleSubmit function to add the color to the list.
-
-- Install the values.js library and use it to generate a list of colors in the App component. Pass the colors list to the ColorList component.
-
-- In the ColorList component, iterate over the list of colors and render each one in a SingleColor component. Fix the key problem by providing a unique id for each color.
-
-- In the SingleColor component, display the hex value and weight (percent) of each color, and use inline CSS to set the background color of the component.
-
-- Import and set up the react-toastify library. In the App component, create logic to generate a new list of colors when the user submits a new color value. Use react-toastify to display an error message if the values.js library cannot generate a color, and also display a toast message if the user tries to submit an empty value.
-
-- In the SingleColor component, set up a click handler that saves the hex value of the color to the browser clipboard.
-
-#### CSS
+Create or update App.css:
 
 ```css
-.colors {
-  min-height: calc(100vh - 160px);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(223.33px, 1fr));
-  grid-template-rows: repeat(auto-fit, minmax(96px, 1fr));
+body {
+  background-color: #222;
+  font-family: 'Poppins', sans-serif;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  padding: 1rem;
+  text-align: center;
+}
+
+header input {
+  padding: 0.5rem;
+  width: 50%;
+  max-width: 400px;
+  border-radius: 5px;
+  border: none;
+  font-size: 1rem;
+}
+
+.movie-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.movie {
+  background-color: #333;
+  margin: 1rem;
+  width: 250px;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.movie:hover {
+  transform: scale(1.05);
+}
+
+.movie img {
+  width: 100%;
+}
+
+.movie-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.movie-overview {
+  padding: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 ```
 
-min-height: calc(100vh - 160px); - This line sets the minimum height of the element. It uses the calc() function to subtract 160 pixels from the viewport height (100vh). The viewport height unit (vh) is relative to the height of the browser window. This means the element will take up at least the full viewport height minus 160 pixels.
+#### 7. Run Your App
 
-display: grid; - This line sets the element's display property to 'grid', enabling the use of the CSS Grid Layout module to arrange its child elements in a grid format.
+```sh
+npm start
+```
 
-grid-template-columns: repeat(auto-fit, minmax(223.33px, 1fr)); - This line defines the number of columns and their width in the grid. The repeat() function is used with the auto-fit keyword, which automatically calculates the number of columns based on the container's width and the minimum and maximum column widths specified in minmax(223.33px, 1fr). The minimum width is set to 223.33 pixels, while the maximum width is set to 1 fraction (1fr) of the available space.
+You should see a list of trending movies, and be able to search for others.
 
-grid-template-rows: repeat(auto-fit, minmax(96px, 1fr)); - This line defines the number of rows and their height in the grid, similar to the previous property. The repeat() function is used with the auto-fit keyword, and the minmax() function defines the minimum row height as 96 pixels and the maximum height as 1 fraction (1fr) of the available space.
+✅ 8. Optional Enhancements
+Add rating color (green/yellow/red based on score).
+
+Add loading indicator.
+
+Add error handling for failed API calls.
+
+Refactor using custom hooks for fetching.
+
+Would you like a GitHub-ready README.md for this project too?
+
+You said:
+yes and name the file steps.md
+ChatGPT said:
+Here is the content for a file named steps.md, which serves as a GitHub-ready guide for your React Movie App project:
+
+📄 steps.md
+markdown
+Copy
+Edit
+
+# 🎬 React Movie App – Step-by-Step Guide
+
+This simple React app fetches and displays movie data from [The Movie Database (TMDB)](https://www.themoviedb.org/documentation/api) API. It also allows users to search for movies.
+
+---
+
+## 📦 1. Project Setup
+
+```bash
+npx create-react-app movie-app
+cd movie-app
+🧹 2. Cleanup Unused Files
+Delete:
+
+App.test.js
+
+logo.svg
+
+setupTests.js
+
+reportWebVitals.js
+
+Update src/index.js:
+
+js
+Copy
+Edit
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+📁 3. Folder Structure
+Create a components folder:
+
+bash
+Copy
+Edit
+mkdir src/components
+touch src/components/Movie.js
+🎞️ 4. Movie Component
+src/components/Movie.js:
+
+jsx
+Copy
+Edit
+import React from 'react';
+
+const Movie = ({ title, poster_path, overview, vote_average }) => {
+  const IMAGE_API = "https://image.tmdb.org/t/p/w500";
+
+  return (
+    <div className="movie">
+      <img src={IMAGE_API + poster_path} alt={title} />
+      <div className="movie-info">
+        <h3>{title}</h3>
+        <span>{vote_average}</span>
+      </div>
+      <div className="movie-overview">
+        <h4>Overview:</h4>
+        <p>{overview}</p>
+      </div>
+    </div>
+  );
+};
+
+export default Movie;
+🧠 5. App Component Logic
+src/App.js:
+
+jsx
+Copy
+Edit
+import React, { useState, useEffect } from 'react';
+import Movie from './components/Movie';
+import './App.css';
+
+const FEATURED_API = 'https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=YOUR_API_KEY';
+const SEARCH_API = 'https://api.themoviedb.org/3/search/movie?&api_key=YOUR_API_KEY&query=';
+
+function App() {
+  const [movies, setMovies] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetch(FEATURED_API)
+      .then(res => res.json())
+      .then(data => setMovies(data.results));
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      fetch(SEARCH_API + searchTerm)
+        .then(res => res.json())
+        .then(data => {
+          setMovies(data.results);
+          setSearchTerm('');
+        });
+    }
+  };
+
+  return (
+    <>
+      <header>
+        <form onSubmit={handleSearch}>
+          <input
+            type="text"
+            placeholder="Search for a movie..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </form>
+      </header>
+      <div className="movie-container">
+        {movies.length > 0 &&
+          movies.map(movie => (
+            <Movie key={movie.id} {...movie} />
+          ))}
+      </div>
+    </>
+  );
+}
+
+export default App;
+✅ Replace YOUR_API_KEY with your actual TMDB API key.
+
+🎨 6. Styling
+src/App.css:
+
+css
+Copy
+Edit
+body {
+  background-color: #222;
+  font-family: 'Poppins', sans-serif;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  padding: 1rem;
+  text-align: center;
+}
+
+header input {
+  padding: 0.5rem;
+  width: 50%;
+  max-width: 400px;
+  border-radius: 5px;
+  border: none;
+  font-size: 1rem;
+}
+
+.movie-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.movie {
+  background-color: #333;
+  margin: 1rem;
+  width: 250px;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.movie:hover {
+  transform: scale(1.05);
+}
+
+.movie img {
+  width: 100%;
+}
+
+.movie-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.movie-overview {
+  padding: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+🚀 7. Run Your App
+bash
+Copy
+Edit
+npm start
+```
